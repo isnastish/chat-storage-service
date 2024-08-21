@@ -14,7 +14,7 @@ import (
 func StartRedisEmulator(port uint) (bool, error) {
 	tearDown := false
 
-	cmd := exec.Command("docker", "run", "--rm", "--name", "redis-emulator", "-p", fmt.Sprintf("%d:6379", port), "redis:latest")
+	cmd := exec.Command("docker", "run", "--rm", "--name", "redis-emulator", "-p", fmt.Sprintf("%d:6379", port), "redis:latest", "--loglevel", "debug", "--requirepass", "12345")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return tearDown, err
