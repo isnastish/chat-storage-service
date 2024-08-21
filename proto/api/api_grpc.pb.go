@@ -31,7 +31,7 @@ const (
 	ChatStorageService_GetChannelHistory_FullMethodName     = "/api.ChatStorageService/GetChannelHistory"
 	ChatStorageService_GetChannelList_FullMethodName        = "/api.ChatStorageService/GetChannelList"
 	ChatStorageService_GetParticipantList_FullMethodName    = "/api.ChatStorageService/GetParticipantList"
-	ChatStorageService_SendMessage_FullMethodName           = "/api.ChatStorageService/SendMessage"
+	ChatStorageService_StoreMessage_FullMethodName          = "/api.ChatStorageService/StoreMessage"
 )
 
 // ChatStorageServiceClient is the client API for ChatStorageService service.
@@ -48,7 +48,7 @@ type ChatStorageServiceClient interface {
 	GetChannelHistory(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetChannelList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ChannelList, error)
 	GetParticipantList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ParticipanList, error)
-	SendMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ChatMessage, emptypb.Empty], error)
+	StoreMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ChatMessage, emptypb.Empty], error)
 }
 
 type chatStorageServiceClient struct {
@@ -159,9 +159,9 @@ func (c *chatStorageServiceClient) GetParticipantList(ctx context.Context, in *e
 	return out, nil
 }
 
-func (c *chatStorageServiceClient) SendMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ChatMessage, emptypb.Empty], error) {
+func (c *chatStorageServiceClient) StoreMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ChatMessage, emptypb.Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ChatStorageService_ServiceDesc.Streams[0], ChatStorageService_SendMessage_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &ChatStorageService_ServiceDesc.Streams[0], ChatStorageService_StoreMessage_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (c *chatStorageServiceClient) SendMessage(ctx context.Context, opts ...grpc
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ChatStorageService_SendMessageClient = grpc.ClientStreamingClient[ChatMessage, emptypb.Empty]
+type ChatStorageService_StoreMessageClient = grpc.ClientStreamingClient[ChatMessage, emptypb.Empty]
 
 // ChatStorageServiceServer is the server API for ChatStorageService service.
 // All implementations must embed UnimplementedChatStorageServiceServer
@@ -186,7 +186,7 @@ type ChatStorageServiceServer interface {
 	GetChannelHistory(context.Context, *wrapperspb.StringValue) (*emptypb.Empty, error)
 	GetChannelList(context.Context, *emptypb.Empty) (*ChannelList, error)
 	GetParticipantList(context.Context, *emptypb.Empty) (*ParticipanList, error)
-	SendMessage(grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]) error
+	StoreMessage(grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]) error
 	mustEmbedUnimplementedChatStorageServiceServer()
 }
 
@@ -227,8 +227,8 @@ func (UnimplementedChatStorageServiceServer) GetChannelList(context.Context, *em
 func (UnimplementedChatStorageServiceServer) GetParticipantList(context.Context, *emptypb.Empty) (*ParticipanList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetParticipantList not implemented")
 }
-func (UnimplementedChatStorageServiceServer) SendMessage(grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]) error {
-	return status.Errorf(codes.Unimplemented, "method SendMessage not implemented")
+func (UnimplementedChatStorageServiceServer) StoreMessage(grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]) error {
+	return status.Errorf(codes.Unimplemented, "method StoreMessage not implemented")
 }
 func (UnimplementedChatStorageServiceServer) mustEmbedUnimplementedChatStorageServiceServer() {}
 func (UnimplementedChatStorageServiceServer) testEmbeddedByValue()                            {}
@@ -431,12 +431,12 @@ func _ChatStorageService_GetParticipantList_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatStorageService_SendMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ChatStorageServiceServer).SendMessage(&grpc.GenericServerStream[ChatMessage, emptypb.Empty]{ServerStream: stream})
+func _ChatStorageService_StoreMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ChatStorageServiceServer).StoreMessage(&grpc.GenericServerStream[ChatMessage, emptypb.Empty]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ChatStorageService_SendMessageServer = grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]
+type ChatStorageService_StoreMessageServer = grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]
 
 // ChatStorageService_ServiceDesc is the grpc.ServiceDesc for ChatStorageService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -488,8 +488,8 @@ var ChatStorageService_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "SendMessage",
-			Handler:       _ChatStorageService_SendMessage_Handler,
+			StreamName:    "StoreMessage",
+			Handler:       _ChatStorageService_StoreMessage_Handler,
 			ClientStreams: true,
 		},
 	},

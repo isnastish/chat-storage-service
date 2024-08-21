@@ -19,7 +19,7 @@ service ChatStorageService {
     rpc GetChannelHistory(google.protobuf.StringValue) returns (google.protobuf.Empty);
 	rpc GetChannelList(google.protobuf.Empty) returns (ChannelList);
     rpc GetParticipantList(google.protobuf.Empty) returns (ParticipanList);
-	rpc SendMessage(stream ChatMessage) returns (google.protobuf.Empty);
+	rpc StoreMessage(stream ChatMessage) returns (google.protobuf.Empty);
 }
 
 message Channel {
