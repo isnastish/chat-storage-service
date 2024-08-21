@@ -45,7 +45,7 @@ type ChatStorageServiceClient interface {
 	RegisterChannel(ctx context.Context, in *Channel, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteChannel(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*wrapperspb.BoolValue, error)
 	GetGeneralChatHistory(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ChatHistory, error)
-	GetChannelHistory(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetChannelHistory(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*ChatHistory, error)
 	GetChannelList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ChannelList, error)
 	GetParticipantList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ParticipanList, error)
 	StoreMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ChatMessage, emptypb.Empty], error)
@@ -129,9 +129,9 @@ func (c *chatStorageServiceClient) GetGeneralChatHistory(ctx context.Context, in
 	return out, nil
 }
 
-func (c *chatStorageServiceClient) GetChannelHistory(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *chatStorageServiceClient) GetChannelHistory(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*ChatHistory, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(ChatHistory)
 	err := c.cc.Invoke(ctx, ChatStorageService_GetChannelHistory_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -183,7 +183,7 @@ type ChatStorageServiceServer interface {
 	RegisterChannel(context.Context, *Channel) (*emptypb.Empty, error)
 	DeleteChannel(context.Context, *wrapperspb.StringValue) (*wrapperspb.BoolValue, error)
 	GetGeneralChatHistory(context.Context, *emptypb.Empty) (*ChatHistory, error)
-	GetChannelHistory(context.Context, *wrapperspb.StringValue) (*emptypb.Empty, error)
+	GetChannelHistory(context.Context, *wrapperspb.StringValue) (*ChatHistory, error)
 	GetChannelList(context.Context, *emptypb.Empty) (*ChannelList, error)
 	GetParticipantList(context.Context, *emptypb.Empty) (*ParticipanList, error)
 	StoreMessage(grpc.ClientStreamingServer[ChatMessage, emptypb.Empty]) error
@@ -218,7 +218,7 @@ func (UnimplementedChatStorageServiceServer) DeleteChannel(context.Context, *wra
 func (UnimplementedChatStorageServiceServer) GetGeneralChatHistory(context.Context, *emptypb.Empty) (*ChatHistory, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGeneralChatHistory not implemented")
 }
-func (UnimplementedChatStorageServiceServer) GetChannelHistory(context.Context, *wrapperspb.StringValue) (*emptypb.Empty, error) {
+func (UnimplementedChatStorageServiceServer) GetChannelHistory(context.Context, *wrapperspb.StringValue) (*ChatHistory, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChannelHistory not implemented")
 }
 func (UnimplementedChatStorageServiceServer) GetChannelList(context.Context, *emptypb.Empty) (*ChannelList, error) {

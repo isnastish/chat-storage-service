@@ -16,7 +16,7 @@ service ChatStorageService {
 	rpc RegisterChannel(Channel) returns (google.protobuf.Empty);
 	rpc DeleteChannel(google.protobuf.StringValue) returns (google.protobuf.BoolValue);
 	rpc GetGeneralChatHistory(google.protobuf.Empty) returns (ChatHistory);
-    rpc GetChannelHistory(google.protobuf.StringValue) returns (google.protobuf.Empty);
+    rpc GetChannelHistory(google.protobuf.StringValue) returns (ChatHistory);
 	rpc GetChannelList(google.protobuf.Empty) returns (ChannelList);
     rpc GetParticipantList(google.protobuf.Empty) returns (ParticipanList);
 	rpc StoreMessage(stream ChatMessage) returns (google.protobuf.Empty);
