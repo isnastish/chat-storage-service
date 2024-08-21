@@ -20,6 +20,7 @@ type Config struct {
 	DynamoConfig       *DynamoConfig
 	FaunaConfig        *FaunaConfig
 	ParticipantTimeout time.Duration
+	AllowUnauthorized  bool
 }
 
 type RedisConfig struct {

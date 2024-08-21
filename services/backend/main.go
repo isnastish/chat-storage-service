@@ -16,6 +16,7 @@ import (
 func main() {
 	var config apitypes.Config
 
+	flag.BoolVar(&config.AllowUnauthorized, "allow_unauthorized", false, "Allow unauthorized calls to service")
 	backend := flag.String("backend", "", "Storage backend")
 	grpcPort := flag.Uint("grpc_port", 50051, "Grpc server listening port")
 	logLevel := flag.String("log_level", "info", "Log level")
