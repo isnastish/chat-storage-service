@@ -63,16 +63,16 @@ func (b *RedisBackend) RegisterParticipant(ctx context.Context, participant *api
 }
 
 // this should probably return an error instead if the authorization fails
-func (b *RedisBackend) AuthorizeParticipant(context.Context, *apitypes.Participant) bool {
-	return false
+func (b *RedisBackend) AuthorizeParticipant(context.Context, *apitypes.Participant) (bool, error) {
+	return false, nil
 }
 
 // experimental (RegesterChannel should return an error if channel is already registered)
-func (b *RedisBackend) HasChannel(context.Context, string) bool {
+func (b *RedisBackend) HasChannel(context.Context, string) (bool, error) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 
-	return false
+	return false, nil
 }
 
 // error is returned if channel doesn't exist
@@ -93,26 +93,26 @@ func (b *RedisBackend) RegisterChannel(ctx context.Context, channel *apitypes.Ch
 	return nil
 }
 
-func (b *RedisBackend) DeleteChannel(context.Context, string) bool {
-	return false
+func (b *RedisBackend) DeleteChannel(ctx context.Context, channelName string) (bool, error) {
+	return false, nil
 }
 
-func (b *RedisBackend) GetGeneralChatHistory(context.Context) *apitypes.ChatHistory {
-	return &apitypes.ChatHistory{}
+func (b *RedisBackend) GetGeneralChatHistory(ctx context.Context) (*apitypes.ChatHistory, error) {
+	return &apitypes.ChatHistory{}, nil
 }
 
-func (b *RedisBackend) GetChannelHistory(context.Context, string) *apitypes.ChatHistory {
-	return &apitypes.ChatHistory{}
+func (b *RedisBackend) GetChannelHistory(ctx context.Context, channelName string) (*apitypes.ChatHistory, error) {
+	return &apitypes.ChatHistory{}, nil
 }
 
-func (b *RedisBackend) GetChannelList(context.Context) *apitypes.ChannelList {
-	return &apitypes.ChannelList{}
+func (b *RedisBackend) GetChannelList(ctx context.Context) (*apitypes.ChannelList, error) {
+	return &apitypes.ChannelList{}, nil
 }
 
-func (b *RedisBackend) GetParticipantList(context.Context) *apitypes.ParticipanList {
-	return &apitypes.ParticipanList{}
+func (b *RedisBackend) GetParticipantList(ctx context.Context) (*apitypes.ParticipanList, error) {
+	return &apitypes.ParticipanList{}, nil
 }
 
-func (b *RedisBackend) StoreMessage(*apitypes.ChatMessage) {
-
+func (b *RedisBackend) StoreMessage(message *apitypes.ChatMessage) error {
+	return nil
 }
