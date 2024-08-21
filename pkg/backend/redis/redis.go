@@ -32,17 +32,33 @@ func NewRedisBackend(config *apitypes.RedisConfig) (*RedisBackend, error) {
 }
 
 // experimental (RegisterParticipant should return an error if participant is already registered)
-func (b *RedisBackend) HasParticipant(ctx context.Context, participantName string) bool {
+func (b *RedisBackend) HasParticipant(ctx context.Context, participantName string) (bool, error) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 
-	return false
+	res, err := b.client.HGetAll(ctx, fmt.Sprintf("participants:%s", participantName)).Result()
+	if err != nil {
+		return false, err
+	}
+
+	return res == nil, nil
 }
 
 // error is returned if participant doesn't exist
-func (b *RedisBackend) RegisterParticipant(context.Context, *apitypes.Participant) error {
+func (b *RedisBackend) RegisterParticipant(ctx context.Context, participant *apitypes.Participant) error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+
+	_, err := b.client.HSet(ctx, fmt.Sprintf("participants:%s", participant.Username), map[string]interface{}{
+		"unsername": participant.Username,
+		"password":  participant.Password,
+		"email":     participant.EmailAddress,
+		"join_time": participant.JoinTime,
+	}).Result()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -53,11 +69,27 @@ func (b *RedisBackend) AuthorizeParticipant(context.Context, *apitypes.Participa
 
 // experimental (RegesterChannel should return an error if channel is already registered)
 func (b *RedisBackend) HasChannel(context.Context, string) bool {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
 	return false
 }
 
 // error is returned if channel doesn't exist
-func (b *RedisBackend) RegisterChannel(context.Context, *apitypes.Channel) error {
+func (b *RedisBackend) RegisterChannel(ctx context.Context, channel *apitypes.Channel) error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	_, err := b.client.HSet(ctx, fmt.Sprintf("channels:%s", channel.Name), map[string]interface{}{
+		"name":          channel.Name,
+		"domain":        channel.Domain,
+		"creator":       channel.Creator,
+		"creation_time": channel.CreationTime,
+	}).Result()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

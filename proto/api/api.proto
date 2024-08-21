@@ -37,7 +37,7 @@ message ChatMessage {
 }
 
 message Participant {
-	string name = 1;
+	string username = 1;
 	string passwordSHA256 = 2;
 	string emailAddress = 3;
 	google.protobuf.Timestamp JoinTime = 4;

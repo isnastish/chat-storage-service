@@ -54,10 +54,10 @@ type Channel struct {
 }
 
 type Participant struct {
-	Name           string
-	PasswordSHA256 string
-	EmailAddress   string
-	JoinTime       time.Time
+	Username     string
+	Password     string
+	EmailAddress string
+	JoinTime     time.Time
 }
 
 type ChatHistory struct {
