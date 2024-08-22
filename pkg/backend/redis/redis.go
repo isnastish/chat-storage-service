@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/isnastish/chat-backend/pkg/apitypes"
 	"github.com/redis/go-redis/v9"
+
+	"github.com/isnastish/chat-backend/pkg/apitypes"
+	"github.com/isnastish/chat-backend/pkg/utils"
 )
 
 type RedisBackend struct {
@@ -46,20 +48,21 @@ func (b *RedisBackend) HasParticipant(ctx context.Context, participantName strin
 
 // error is returned if participant doesn't exist
 func (b *RedisBackend) RegisterParticipant(ctx context.Context, participant *apitypes.Participant) error {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+	password, err := utils.SHA256(participant.Password)
+	if err != nil {
+		return fmt.Errorf("Failed compute sha256 hash for password %v", err)
+	}
 
-	_, err := b.client.HSet(ctx, fmt.Sprintf("participants:%s", participant.Username), map[string]interface{}{
+	b.mutex.Lock()
+	_, err = b.client.HSet(ctx, fmt.Sprintf("participants:%s", participant.Username), map[string]interface{}{
 		"unsername": participant.Username,
-		"password":  participant.Password,
+		"password":  password,
 		"email":     participant.EmailAddress,
 		"join_time": participant.JoinTime,
 	}).Result()
-	if err != nil {
-		return err
-	}
+	b.mutex.Unlock()
 
-	return nil
+	return err
 }
 
 // this should probably return an error instead if the authorization fails
