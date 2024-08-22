@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 
@@ -131,7 +132,40 @@ func (b *RedisBackend) GetChannelList(ctx context.Context) (*apitypes.ChannelLis
 }
 
 func (b *RedisBackend) GetParticipantList(ctx context.Context) (*apitypes.ParticipanList, error) {
-	return &apitypes.ParticipanList{}, nil
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	usernames, err := b.client.SMembers(ctx, "channels:").Result()
+	if err != nil {
+		return nil, err
+	}
+
+	result := &apitypes.ParticipanList{}
+	if len(usernames) != 0 {
+		participants := make([]*apitypes.Participant, len(usernames))
+		_, err = b.client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			for _, username := range usernames {
+				participant, err := pipe.HGetAll(ctx, username).Result()
+				if err != nil {
+					return err
+				}
+
+				joinTime, _ := time.Parse(time.Layout, participant["join_time"])
+				participants = append(participants, &apitypes.Participant{
+					Username:     participant["username"],
+					Password:     participant["password"], // password is hashed
+					EmailAddress: participant["email"],
+					JoinTime:     joinTime,
+				})
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+		result.Participants = participants
+	}
+	return result, nil
 }
 
 func (b *RedisBackend) StoreMessage(message *apitypes.ChatMessage) error {
