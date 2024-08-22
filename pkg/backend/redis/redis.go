@@ -27,73 +27,91 @@ func NewRedisBackend(config *apitypes.RedisConfig) (*RedisBackend, error) {
 	client := redis.NewClient(&opts)
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't connect to redis %v", err)
+		return nil, fmt.Errorf("couldn't connect to redis %v", err)
 	}
 
 	return &RedisBackend{client: client}, nil
 }
 
-// experimental (RegisterParticipant should return an error if participant is already registered)
 func (b *RedisBackend) HasParticipant(ctx context.Context, participantName string) (bool, error) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
+	isMember, err := b.client.SIsMember(ctx, "participants:", participantName).Result()
+	return isMember, err
+}
 
-	res, err := b.client.HGetAll(ctx, fmt.Sprintf("participants:%s", participantName)).Result()
+func (b *RedisBackend) RegisterParticipant(ctx context.Context, participant *apitypes.Participant) error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	hashedPassword, _ := utils.SHA256(participant.Password)
+
+	if _, err := b.client.HSet(ctx, participant.Username, map[string]interface{}{
+		"unsername": participant.Username,
+		"password":  hashedPassword,
+		"email":     participant.EmailAddress,
+		"join_time": participant.JoinTime,
+	}).Result(); err != nil {
+		return err
+	}
+	// Add participant's username to `participants` set
+	_, err := b.client.SAdd(ctx, "participants:", participant.Username).Result()
+	return err
+}
+
+func (b *RedisBackend) AuthorizeParticipant(ctx context.Context, participant *apitypes.Participant) (bool, error) {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	isMember, err := b.client.SIsMember(ctx, "participants:", participant.Username).Result()
+	if err != nil {
+		return false, err
+	}
+	if !isMember {
+		return false, fmt.Errorf("participant not found %s", participant.Username)
+	}
+
+	password, err := b.client.HGet(ctx, participant.Username, "password").Result()
 	if err != nil {
 		return false, err
 	}
 
-	return res == nil, nil
-}
-
-// error is returned if participant doesn't exist
-func (b *RedisBackend) RegisterParticipant(ctx context.Context, participant *apitypes.Participant) error {
-	password, err := utils.SHA256(participant.Password)
-	if err != nil {
-		return fmt.Errorf("Failed compute sha256 hash for password %v", err)
+	if passwordHash, _ := utils.SHA256(participant.Password); passwordHash != password {
+		return false, nil
 	}
 
-	b.mutex.Lock()
-	_, err = b.client.HSet(ctx, fmt.Sprintf("participants:%s", participant.Username), map[string]interface{}{
-		"unsername": participant.Username,
-		"password":  password,
-		"email":     participant.EmailAddress,
-		"join_time": participant.JoinTime,
-	}).Result()
-	b.mutex.Unlock()
-
-	return err
+	return true, nil
 }
 
-// this should probably return an error instead if the authorization fails
-func (b *RedisBackend) AuthorizeParticipant(context.Context, *apitypes.Participant) (bool, error) {
-	return false, nil
-}
-
-// experimental (RegesterChannel should return an error if channel is already registered)
-func (b *RedisBackend) HasChannel(context.Context, string) (bool, error) {
+func (b *RedisBackend) HasChannel(ctx context.Context, channelName string) (bool, error) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
-
-	return false, nil
+	isMember, err := b.client.SIsMember(ctx, "channels:", channelName).Result()
+	return isMember, err
 }
 
-// error is returned if channel doesn't exist
 func (b *RedisBackend) RegisterChannel(ctx context.Context, channel *apitypes.Channel) error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-
-	_, err := b.client.HSet(ctx, fmt.Sprintf("channels:%s", channel.Name), map[string]interface{}{
-		"name":          channel.Name,
-		"domain":        channel.Domain,
-		"creator":       channel.Creator,
-		"creation_time": channel.CreationTime,
-	}).Result()
+	isMember, err := b.client.SIsMember(ctx, "channels:", channel.Name).Result()
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if isMember {
+		return fmt.Errorf("channel already exists")
+	}
+
+	if _, err := b.client.HSet(ctx, channel.Name, map[string]interface{}{
+		"name":          channel.Name,
+		"domain":        channel.Domain,
+		"creator":       channel.Creator,
+		"creation_time": channel.CreationTime,
+	}).Result(); err != nil {
+		return err
+	}
+	_, err = b.client.SAdd(ctx, "channels:", channel.Name).Result()
+	return err
 }
 
 func (b *RedisBackend) DeleteChannel(ctx context.Context, channelName string) (bool, error) {

@@ -75,3 +75,23 @@ func TestRegisterChannel(t *testing.T) {
 		t.Fatalf("Failed to register channel %v", err)
 	}
 }
+
+func TestAuthorizeParticipant(t *testing.T) {
+	rb := GetRedisBackend(t)
+	participant := &apitypes.Participant{
+		Username:     "fedor",
+		Password:     "fedor1234@__",
+		EmailAddress: "fedor@gmil.com",
+		JoinTime:     time.Now(),
+	}
+
+	_ = rb.RegisterParticipant(context.Background(), participant)
+
+	authorized, err := rb.AuthorizeParticipant(context.Background(), participant)
+	if err != nil {
+		t.Fatalf("Call failed %v", err)
+	}
+	if !authorized {
+		t.Fatalf("Failed to authorized participant")
+	}
+}
